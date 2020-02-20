@@ -79,6 +79,7 @@ ax.YGrid = 'on';
 
 stop = false;
 startTime = datetime('now');
+
 while ~stop
     % Read current voltage value
     v1 = readVoltage(a,'A0');
@@ -133,8 +134,8 @@ plot(timeSecs,smoothedTemp,'r')
 
 %% Save results to a file
 
-T = table(timeSecs1',tempLogs1',tempLogs2','VariableNames',{'Time_sec','Voltage1', 'Voltage2'});
-filename = 'Protocol1.xlsx';
+T = table(timeSecs1',tempLogs2',tempLogs1','VariableNames',{'Time_sec','Voltage1', 'Voltage2'});
+filename = 'Protocol_20_02_parallel_extension_2_sensors_2_switched.xlsx';
 % Write table to file 
 writetable(T,filename)
 % Print confirmation to command line
