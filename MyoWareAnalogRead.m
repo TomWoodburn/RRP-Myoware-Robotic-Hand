@@ -69,7 +69,10 @@ fprintf('The smallest measurable increment of this sensor by the Arduino is\n %-
 %% Acquire and display live data (V fixed)
 
 figure
-h = animatedline;
+hold on
+h1 = animatedline();
+h2 = animatedline('Color','r','LineWidth',0.5);
+hold off
 ax = gca;
 ax.YGrid = 'on';
 %ax.YLim = [65 85];
@@ -78,14 +81,16 @@ stop = false;
 startTime = datetime('now');
 while ~stop
     % Read current voltage value
-    v = readVoltage(a,'A0');
+    v1 = readVoltage(a,'A0');
+    v2 = readVoltage(a, 'A1');
     % Calculate temperature from voltage (based on data sheet)
     %TempC = (v - 0.5)*100;
     %TempF = 9/5*TempC + 32;    
     % Get current time
     t =  datetime('now') - startTime;
     % Add points to animation
-    addpoints(h,datenum(t),v)
+    addpoints(h1,datenum(t),v1)
+    addpoints(h2,datenum(t),v2)
     % Update axes
     ax.XLim = datenum([t-seconds(15) t]);
     datetick('x','keeplimits')
@@ -96,21 +101,26 @@ end
 
 %% Plot the recorded data 
 
-[timeLogs,tempLogs] = getpoints(h);
-timeSecs = (timeLogs-timeLogs(1))*24*3600;
+[timeLogs1,tempLogs1] = getpoints(h1);
+[timeLogs2,tempLogs2] = getpoints(h2);
+timeSecs1 = (timeLogs1-timeLogs1(1))*24*3600;
+timeSecs2 = (timeLogs2-timeLogs2(1))*24*3600;
 figure
-plot(timeSecs,tempLogs)
+hold on
+plot(timeSecs1,tempLogs1)
+plot(timeSecs2,tempLogs2)
+hold off
 xlabel('Elapsed time (sec)')
 ylabel('Recorded Voltage (V)')
 
 %% Smooth out readings with moving average filter
 
-smoothedTemp = smooth(tempLogs,25);
+smoothedTemp = smooth(tempLogs1,25);
 tempMax = smoothedTemp + 2*9/5;
 tempMin = smoothedTemp - 2*9/5;
 
 figure
-plot(timeSecs,tempLogs, timeSecs,tempMax,'r--',timeSecs,tempMin,'r--')
+plot(timeSecs,tempLogs1, timeSecs,tempMax,'r--',timeSecs,tempMin,'r--')
 xlabel('Elapsed time (sec)')
 ylabel('Recorded Voltage (V)')
 hold on 
@@ -123,10 +133,10 @@ plot(timeSecs,smoothedTemp,'r')
 
 %% Save results to a file
 
-T = table(timeSecs',tempLogs','VariableNames',{'Time_sec','Temp_F'});
+T = table(timeSecs1',tempLogs1',tempLogs2','VariableNames',{'Time_sec','Voltage1', 'Voltage2'});
 filename = 'Protocol1.xlsx';
 % Write table to file 
 writetable(T,filename)
 % Print confirmation to command line
 fprintf('Results table with %g temperature measurements saved to file %s\n',...
-    length(timeSecs),filename)
+    length(timeSecs1),filename)
