@@ -36,6 +36,7 @@ while toc < 10
     %TempF(ii) = 9/5*TempC + 32;
     % Get time since starting
     t(ii) = toc;
+    %testing
 end
 
 % Post-process and plot the data. First remove any excess zeros on the
