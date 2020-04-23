@@ -12,7 +12,7 @@ col3 = LT1.data(1417:end, 3)';
 
 %Normcol2 = col2 ./ max(col2,'includenan','all')
 
-Normalize(col2,'range');
+%Normalize(col2,'range');
 
 %% Plotting Gradient of the curve
 FY = gradient(col2);
@@ -74,12 +74,14 @@ legend('Data')
 figure()
 %title('Detecting Changes RMS')
 findchangepts(col2,'MaxNumChanges',34,'Statistic','rms')
-
+%%
 figure()
 %title('Detecting Changes Mean')
 findchangepts(col2,'MaxNumChanges',34,'Statistic','mean')
-
-
+figure()
+%title('Detecting Changes Mean')
+findchangepts(col3,'MaxNumChanges',34,'Statistic','mean')
+%%
 figure()
 %title('Detecting Changes std')
 findchangepts(col2,'MaxNumChanges',34,'Statistic','std')

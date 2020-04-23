@@ -4,7 +4,7 @@ clear all; clc; close all;
 dt = 0.01;
 data = csvread('20_02_protocol/20_02_Protocol_light_tool_1.csv',1,0);
 % Generate time array
-
+data = data(1400: size(data),:);
 t = data(:,1)';
 
 %%%%%%% Kalman filter matrices %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -24,9 +24,9 @@ C = [1 0 0;
     1 0 0];
 
 % Observation noise and covariance matrix
-Sigma = 0.5;
+Sigma = 0.8;
 R=[(Sigma^2) 0;
-    0 (0.8^2)];
+    0 (0.5^2)];
 
 % Initialize state and error covariance matrices
 xInit = zeros(3,1);
@@ -42,16 +42,7 @@ x = KalmanFilter(A,C,Q,R,xInit,PInit,SignalNoisy);
 %%
 figure(1)
 splits = 35;
-findchangepts(x(1,:),'MaxNumChanges',splits,'Statistic','mean');
-
-%%
-figure()
-%title('Detecting Changes Mean')
-findchangepts(data(:,2),'MaxNumChanges',34,'Statistic','mean')
-figure()
-%title('Detecting Changes Mean')
-findchangepts(data(:,3),'MaxNumChanges',34,'Statistic','mean')
-%%
+itp = findchangepts(x(1,:),'MaxNumChanges',splits,'Statistic','mean');
 %% Plots
 set(0,'DefaultFigureWindowStyle','docked')
 
@@ -60,12 +51,29 @@ hold on;
 
 plot(t,SignalNoisy(1,:),'r');
 plot(t,SignalNoisy(2,:));
-plot(t,x(1,:),'b','linewidth',1.5);
+for i=1:splits
+    xline(t(itp(i)))
+end
 title('Kalman Filter 2 signals & sigma: 0.5')
 legend('Sensor 1','Sensor 2','Combined Filtered Signal');
 
 xlabel('Time (s)','fontsize',15);
 ylabel('Voltage (V)','fontsize',15);
 
-
-
+hold off
+%%
+for i =1:splits-1
+    figure
+    hold on
+    %lineGraph
+    plot(SignalNoisy(1,itp(i):itp(i+1)),SignalNoisy(2,itp(i):itp(i+1)))
+    
+    
+    %ScatterGraph
+    %scatter(SignalNoisy(1,itp(i):itp(i+1)),SignalNoisy(2,itp(i):itp(i+1)))
+    
+    %The splits
+    %plot(t(itp(i):itp(i+1)),SignalNoisy(1,itp(i):itp(i+1)),'r');
+    %plot(t(itp(i):itp(i+1)),SignalNoisy(2,itp(i):itp(i+1)));
+    hold off
+end

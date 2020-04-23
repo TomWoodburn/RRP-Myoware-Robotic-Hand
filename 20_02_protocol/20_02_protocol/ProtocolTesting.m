@@ -119,6 +119,8 @@ legend('Signal 2: Centre of Palmarus Longus muscle','Signal 1: Middle of Extenso
 hold off
 
 %%
+t = MWtime3
+s = MWvolt3N
 % 1. remove DC
 min_s=min(s)
 s=s+abs(min_s)
