@@ -39,41 +39,86 @@ SignalNoisy = data(:,2:3)';
 
 % LQE function
 x = KalmanFilter(A,C,Q,R,xInit,PInit,SignalNoisy);
-%%
-figure(1)
-splits = 35;
-itp = findchangepts(x(1,:),'MaxNumChanges',splits,'Statistic','mean');
+figure
+X = [SignalNoisy(1,:); SignalNoisy(2,:)]';
+GMModel = fitgmdist(X,2);
+figure
+y = [zeros(1000,1);ones(1000,1)];
+h = gscatter(X(:,1),X(:,2));
+hold on
+gmPDF = @(x1,x2)reshape(pdf(GMModel,[x1(:) x2(:)]),size(x1));
+g = gca;
+fcontour(gmPDF,[g.XLim g.YLim])
+title('{\bf Scatter Plot and Fitted Gaussian Mixture Contours}')
+axis([0 inf 0 5])
+hold off
 %% Plots
 set(0,'DefaultFigureWindowStyle','docked')
 
-figure(2);set(gcf,'color','white');
-hold on;
+splits = 60;
 
+itp = findchangepts(x(1,:),'MaxNumChanges',splits,'Statistic','mean');
+
+
+figure();set(gcf,'color','white');
+hold on;
+itptrimpre = [1];
+for i= 1:splits-1
+    if itp(i+1)-itp(i) >60
+        itptrimpre = [itptrimpre itp(i+1)];
+    end
+    
+end
+itptrim=[]
+for i = 1:size(itptrimpre,2)-1
+    if mean(x(1,itptrimpre(i):itptrimpre(i+1))) > 0.5
+        itptrim = [itptrim [itptrimpre(i);1]];
+    else
+        itptrim = [itptrim [itptrimpre(i);0]];
+    end
+end
+itp = itptrim;
 plot(t,SignalNoisy(1,:),'r');
 plot(t,SignalNoisy(2,:));
-for i=1:splits
-    xline(t(itp(i)))
+itpSize = size(itp,2);
+for i=1:itpSize
+    if itp(2,i)==1
+        xline(t(itp(1,i)));
+    else
+        xline(t(itp(1,i)),'r');
+    end
 end
-title('Kalman Filter 2 signals & sigma: 0.5')
-legend('Sensor 1','Sensor 2','Combined Filtered Signal');
-
-xlabel('Time (s)','fontsize',15);
-ylabel('Voltage (V)','fontsize',15);
-
+plot(t,x(1,:))
 hold off
+
 %%
-for i =1:splits-1
+for i =1:itpSize-1
     figure
     hold on
     %lineGraph
-    plot(SignalNoisy(1,itp(i):itp(i+1)),SignalNoisy(2,itp(i):itp(i+1)))
-    
-    
+    %plot(SignalNoisy(1,itp(i):itp(i+1)),SignalNoisy(2,itp(i):itp(i+1)))
     %ScatterGraph
-    %scatter(SignalNoisy(1,itp(i):itp(i+1)),SignalNoisy(2,itp(i):itp(i+1)))
-    
+    scatter(SignalNoisy(1,itp(1,i):itp(1,i+1)),SignalNoisy(2,itp(1,i):itp(1,i+1)))
+    hold off
     %The splits
-    %plot(t(itp(i):itp(i+1)),SignalNoisy(1,itp(i):itp(i+1)),'r');
-    %plot(t(itp(i):itp(i+1)),SignalNoisy(2,itp(i):itp(i+1)));
+    figure
+    hold on
+    plot(t(itp(1,i):itp(1,i+1)),SignalNoisy(1,itp(1,i):itp(1,i+1)),'r');
+    plot(t(itp(1,i):itp(1,i+1)),SignalNoisy(2,itp(1,i):itp(1,i+1)));
+    X = [SignalNoisy(1,itp(1,i):itp(1,i+1));SignalNoisy(2,itp(1,i):itp(1,i+1))]';
+    %PolyFit
+    %[p, S, mu] = polyfit(t(itp(i):itp(i+1)),SignalNoisy(2,itp(i):itp(i+1)),10);
+    %plot(t(itp(i):itp(i+1)), polyval(p, t(itp(i):itp(i+1)))); 
+    hold off
+    GMModel = fitgmdist(X,1);
+    figure
+    y = [zeros(1000,1);ones(1000,1)];
+    h = gscatter(X(:,1),X(:,2));
+    hold on
+    gmPDF = @(x1,x2)reshape(pdf(GMModel,[x1(:) x2(:)]),size(x1));
+    g = gca;
+    fcontour(gmPDF,[g.XLim g.YLim])
+    title('{\bf Scatter Plot and Fitted Gaussian Mixture Contours}')
+    axis([0 inf 0 5])
     hold off
 end

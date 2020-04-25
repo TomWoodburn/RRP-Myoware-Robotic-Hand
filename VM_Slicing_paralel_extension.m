@@ -4,8 +4,8 @@ clear all; clc; close all;
 dt = 0.01;
 data = csvread('20_02_protocol/20_02_Protocol_parallel_extension_1.csv',1,0);
 % Generate time array
-data = data(1100:4500,:);
-t = data(:,1)';
+data = data(1050:4400,:);
+tpe = data(:,1)';
 
 %%%%%%% Kalman filter matrices %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % State transition matrix
@@ -38,29 +38,49 @@ PInit = diag([1 1 1]);
 SignalNoisy = data(:,2:3)';
 
 % LQE function
-x = KalmanFilter(A,C,Q,R,xInit,PInit,SignalNoisy);
+xpe = KalmanFilter(A,C,Q,R,xInit,PInit,SignalNoisy);
+X = [SignalNoisy(1,:); SignalNoisy(2,:)]';
+GMModel = fitgmdist(X,3);
+figure
+y = [zeros(1000,1);ones(1000,1)];
+h = gscatter(X(:,1),X(:,2));
+hold on
+gmPDF = @(x1,x2)reshape(pdf(GMModel,[x1(:) x2(:)]),size(x1));
+g = gca;
+fcontour(gmPDF,[g.XLim g.YLim])
+title('{\bf Scatter Plot and Fitted Gaussian Mixture Contours}')
+axis([0 inf 0 5]);
+hold off
 %%
 figure(1)
-splits = 35;
-findchangepts(x(1,:),'MaxNumChanges',splits,'Statistic','mean');
-
-%%
-figure()
-%title('Detecting Changes Mean')
-findchangepts(data(:,2),'MaxNumChanges',splits,'Statistic','mean')
-figure()
-%title('Detecting Changes Mean')
-findchangepts(data(:,3),'MaxNumChanges',splits,'Statistic','mean')
-%%
+splitsPE = 90;
+itpPE = findchangepts(xpe(1,:),'MaxNumChanges',splitsPE,'Statistic','mean');
+figure();set(gcf,'color','white');
+hold on;
+itptrim = [1];
+for i= 1:splitsPE-1
+    if itpPE(i+1)-itpPE(i) >50
+        itptrim = [itptrim itpPE(i+1)];
+    end
+    
+end
+itpPE = itptrim;
+plot(tpe,SignalNoisy(1,:),'r');
+plot(tpe,SignalNoisy(2,:));
+itpSize = size(itpPE);
+for i=1:itpSize(2)
+    xline(tpe(itpPE(i)));
+end
+hold off
 %% Plots
 set(0,'DefaultFigureWindowStyle','docked')
 
 figure();set(gcf,'color','white');
 hold on;
 
-plot(t,SignalNoisy(1,:),'r');
-plot(t,SignalNoisy(2,:));
-plot(t,x(1,:),'b','linewidth',1.5);
+plot(tpe,SignalNoisy(1,:),'r');
+plot(tpe,SignalNoisy(2,:));
+plot(tpe,xpe(1,:),'b','linewidth',1.5);
 title('Kalman Filter 2 signals & sigma: 0.5')
 legend('Sensor 1','Sensor 2','Combined Filtered Signal');
 

@@ -2,10 +2,10 @@ clear all; clc; close all;
 
 % Discretization of continuous system
 dt = 0.01;
-data = csvread('20_02_protocol/20_02_Protocol_parallel_extension_1.csv',1,0);
+data = csvread('20_02_protocol/20_02_Protocol_Power_grasp_3.csv',1,0);
 % Generate time array
-data = data(1100:4500,:);
-t = data(:,1)';
+data = data(2300:5804,:);
+tpg = data(:,1)';
 
 %%%%%%% Kalman filter matrices %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % State transition matrix
@@ -38,29 +38,49 @@ PInit = diag([1 1 1]);
 SignalNoisy = data(:,2:3)';
 
 % LQE function
-x = KalmanFilter(A,C,Q,R,xInit,PInit,SignalNoisy);
+xp = KalmanFilter(A,C,Q,R,xInit,PInit,SignalNoisy);figure
+X = [SignalNoisy(1,:); SignalNoisy(2,:)]';
+GMModel = fitgmdist(X,3);
+figure
+y = [zeros(1000,1);ones(1000,1)];
+h = gscatter(X(:,1),X(:,2));
+hold on
+gmPDF = @(x1,x2)reshape(pdf(GMModel,[x1(:) x2(:)]),size(x1));
+g = gca;
+fcontour(gmPDF,[g.XLim g.YLim])
+title('{\bf Scatter Plot and Fitted Gaussian Mixture Contours}')
+axis([0 inf 0 5]);
+hold off
 %%
 figure(1)
-splits = 35;
-findchangepts(x(1,:),'MaxNumChanges',splits,'Statistic','mean');
-
-%%
-figure()
-%title('Detecting Changes Mean')
-findchangepts(data(:,2),'MaxNumChanges',splits,'Statistic','mean')
-figure()
-%title('Detecting Changes Mean')
-findchangepts(data(:,3),'MaxNumChanges',splits,'Statistic','mean')
-%%
+splitsPG = 60;
+itpPG = findchangepts(xp(1,:),'MaxNumChanges',splitsPG,'Statistic','mean');
+figure();set(gcf,'color','white');
+hold on;
+itptrim = [1];
+for i= 1:splitsPG-1
+    if itpPG(i+1)-itpPG(i) >60
+        itptrim = [itptrim itpPG(i+1)];
+    end
+    
+end
+itpPG = itptrim;
+plot(tpg,SignalNoisy(1,:),'r');
+plot(tpg,SignalNoisy(2,:));
+itpSize = size(itpPG);
+for i=1:itpSize(2)
+    xline(tpg(itpPG(i)));
+end
+hold off
 %% Plots
 set(0,'DefaultFigureWindowStyle','docked')
 
 figure();set(gcf,'color','white');
 hold on;
 
-plot(t,SignalNoisy(1,:),'r');
-plot(t,SignalNoisy(2,:));
-plot(t,x(1,:),'b','linewidth',1.5);
+plot(tpg,SignalNoisy(1,:),'r');
+plot(tpg,SignalNoisy(2,:));
+plot(tpg,xp(1,:),'b','linewidth',1.5);
 title('Kalman Filter 2 signals & sigma: 0.5')
 legend('Sensor 1','Sensor 2','Combined Filtered Signal');
 
