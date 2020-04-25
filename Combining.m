@@ -42,12 +42,12 @@ xl = KalmanFilter(A,C,Q,R,xInit,PInit,SignalNoisy);
 
 
 X = [sgolayfilt(SignalNoisy(1,:),7,111); sgolayfilt(SignalNoisy(2,:),7,111)]';
-GMModel = fitgmdist(X,2);
+GMModelLT = fitgmdist(X,2);
 figure('Name','Light tool')
 y = [zeros(1000,1);ones(1000,1)];
 h = gscatter(X(:,1),X(:,2));
 hold on
-gmPDF = @(x1,x2)reshape(pdf(GMModel,[x1(:) x2(:)]),size(x1));
+gmPDF = @(x1,x2)reshape(pdf(GMModelLT,[x1(:) x2(:)]),size(x1));
 g = gca;
 fcontour(gmPDF,[g.XLim g.YLim])
 title('{\bf Scatter Plot and Fitted Gaussian Mixture Contours}')
@@ -114,10 +114,29 @@ for i =1:itpSize-1
     plot(tlt(itpL(1,i):itpL(1,i+1)),SignalNoisy(1,itpL(1,i):itpL(1,i+1)),'r');
     plot(tlt(itpL(1,i):itpL(1,i+1)),SignalNoisy(2,itpL(1,i):itpL(1,i+1)));
     X = [sgolayfilt(SignalNoisy(1,itpL(1,i):itpL(1,i+1)),5,7);sgolayfilt(SignalNoisy(2,itpL(1,i):itpL(1,i+1)),5,7)]';
+
     %PolyFit
-    %[p, S, mu] = polyfit(t(itp(i):itp(i+1)),SignalNoisy(2,itp(i):itp(i+1)),10);
-    %plot(t(itp(i):itp(i+1)), polyval(p, t(itp(i):itp(i+1)))); 
+    figure
+    polynomial=3;
+    hold on
+    [p, S] = polyfit(tlt(itpL(1,i):itpL(1,i+1)),SignalNoisy(1,itpL(1,i):itpL(1,i+1)),polynomial);
+    f = polyval(p,tlt(itpL(1,i):itpL(1,i+1)));
+    plot(tlt(itpL(1,i):itpL(1,i+1)),SignalNoisy(1,itpL(1,i):itpL(1,i+1)),'*',tlt(itpL(1,i):itpL(1,i+1)),f,'-')
+    
+    [p, S] = polyfit(tlt(itpL(1,i):itpL(1,i+1)),SignalNoisy(2,itpL(1,i):itpL(1,i+1)),polynomial);
+    f = polyval(p,tlt(itpL(1,i):itpL(1,i+1)));
+    plot(tlt(itpL(1,i):itpL(1,i+1)),SignalNoisy(2,itpL(1,i):itpL(1,i+1)),'*',tlt(itpL(1,i):itpL(1,i+1)),f,'-')
+    
+    
+    [p, S] = polyfit(tlt(itpL(1,i):itpL(1,i+1)),xl(1,itpL(1,i):itpL(1,i+1)),polynomial);
+    f = polyval(p,tlt(itpL(1,i):itpL(1,i+1)));
+    plot(tlt(itpL(1,i):itpL(1,i+1)),xl(1,itpL(1,i):itpL(1,i+1)),'*',tlt(itpL(1,i):itpL(1,i+1)),f,'-')
+    
+    title(['Order is: ',num2str(polynomial),' norm is: ',num2str(S.normr)])
     hold off
+    
+    
+    
     GMModel = fitgmdist(X,1);
     figure
     y = [zeros(1000,1);ones(1000,1)];
@@ -136,13 +155,14 @@ dataPG = dataPG(2300:5804,:);
 SignalNoisy = dataPG(:,2:3)';
 tpg = dataPG(:,1)';
 xp = KalmanFilter(A,C,Q,R,xInit,PInit,SignalNoisy);
+
 X = [sgolayfilt(SignalNoisy(1,:),7,111); sgolayfilt(SignalNoisy(2,:),7,111)]';
-GMModel = fitgmdist(X,2);
+GMModelPG = fitgmdist(X,2);
 figure('Name','Power grasp')
 y = [zeros(1000,1);ones(1000,1)];
 h = gscatter(X(:,1),X(:,2));
 hold on
-gmPDF = @(x1,x2)reshape(pdf(GMModel,[x1(:) x2(:)]),size(x1));
+gmPDF = @(x1,x2)reshape(pdf(GMModelPG,[x1(:) x2(:)]),size(x1));
 g = gca;
 fcontour(gmPDF,[g.XLim g.YLim])
 title('{\bf Scatter Plot and Fitted Gaussian Mixture Contours}')
@@ -205,10 +225,27 @@ for i =1:itpSize-1
     plot(tpg(itpPG(1,i):itpPG(1,i+1)),SignalNoisy(1,itpPG(1,i):itpPG(1,i+1)),'r');
     plot(tpg(itpPG(1,i):itpPG(1,i+1)),SignalNoisy(2,itpPG(1,i):itpPG(1,i+1)));
     X = [sgolayfilt(SignalNoisy(1,itpPG(1,i):itpPG(1,i+1)),5,7);sgolayfilt(SignalNoisy(2,itpPG(1,i):itpPG(1,i+1)),5,7)]';
+
     %PolyFit
-    %[p, S, mu] = polyfit(t(itp(i):itp(i+1)),SignalNoisy(2,itp(i):itp(i+1)),10);
-    %plot(t(itp(i):itp(i+1)), polyval(p, t(itp(i):itp(i+1)))); 
+    figure
+    polynomial=3;
+    hold on
+    [p, S] = polyfit(tpg(itpPG(1,i):itpPG(1,i+1)),SignalNoisy(1,itpPG(1,i):itpPG(1,i+1)),polynomial);
+    f = polyval(p,tpg(itpPG(1,i):itpPG(1,i+1)));
+    plot(tpg(itpPG(1,i):itpPG(1,i+1)),SignalNoisy(1,itpPG(1,i):itpPG(1,i+1)),'*',tpg(itpPG(1,i):itpPG(1,i+1)),f,'-')
+    
+    [p, S] = polyfit(tpg(itpPG(1,i):itpPG(1,i+1)),SignalNoisy(2,itpPG(1,i):itpPG(1,i+1)),polynomial);
+    f = polyval(p,tpg(itpPG(1,i):itpPG(1,i+1)));
+    plot(tpg(itpPG(1,i):itpPG(1,i+1)),SignalNoisy(2,itpPG(1,i):itpPG(1,i+1)),'*',tpg(itpPG(1,i):itpPG(1,i+1)),f,'-')
+    
+    [p, S] = polyfit(tpg(itpPG(1,i):itpPG(1,i+1)),xp(1,itpPG(1,i):itpPG(1,i+1)),polynomial);
+    f = polyval(p,tpg(itpPG(1,i):itpPG(1,i+1)));
+    plot(tpg(itpPG(1,i):itpPG(1,i+1)),xp(1,itpPG(1,i):itpPG(1,i+1)),'*',tpg(itpPG(1,i):itpPG(1,i+1)),f,'-')    
+
+    title(['Order is: ',num2str(polynomial),' norm is: ',num2str(S.normr)])
     hold off
+       
+    
     GMModel = fitgmdist(X,1);
     figure
     y = [zeros(1000,1);ones(1000,1)];
@@ -229,12 +266,12 @@ ts = dataS(:,1)';
 SignalNoisy = dataS(:,2:3)';
 xs = KalmanFilter(A,C,Q,R,xInit,PInit,SignalNoisy);
 X = [sgolayfilt(SignalNoisy(1,:),7,111); sgolayfilt(SignalNoisy(2,:),7,111)]';
-GMModel = fitgmdist(X,2);
+GMModelSF = fitgmdist(X,2);
 figure('Name','Sphere finger')
 y = [zeros(1000,1);ones(1000,1)];
 h = gscatter(X(:,1),X(:,2));
 hold on
-gmPDF = @(x1,x2)reshape(pdf(GMModel,[x1(:) x2(:)]),size(x1));
+gmPDF = @(x1,x2)reshape(pdf(GMModelSF,[x1(:) x2(:)]),size(x1));
 g = gca;
 fcontour(gmPDF,[g.XLim g.YLim])
 title('{\bf Scatter Plot and Fitted Gaussian Mixture Contours}')
@@ -296,10 +333,31 @@ for i =1:itpSize-1
     plot(ts(itpS(1,i):itpS(1,i+1)),SignalNoisy(1,itpS(1,i):itpS(1,i+1)),'r');
     plot(ts(itpS(1,i):itpS(1,i+1)),SignalNoisy(2,itpS(1,i):itpS(1,i+1)));
     X = [sgolayfilt(SignalNoisy(1,itpS(1,i):itpS(1,i+1)),5,9);sgolayfilt(SignalNoisy(2,itpS(1,i):itpS(1,i+1)),5,9)]';
-    %PolyFit
-    %[p, S, mu] = polyfit(t(itp(i):itp(i+1)),SignalNoisy(2,itp(i):itp(i+1)),10);
-    %plot(t(itp(i):itp(i+1)), polyval(p, t(itp(i):itp(i+1)))); 
     hold off
+    
+    %PolyFit
+    figure
+    polynomial=3;
+    hold on
+    [p, S] = polyfit(ts(itpS(1,i):itpS(1,i+1)),SignalNoisy(1,itpS(1,i):itpS(1,i+1)),polynomial);
+    f = polyval(p,ts(itpS(1,i):itpS(1,i+1)));
+    plot(ts(itpS(1,i):itpS(1,i+1)),SignalNoisy(1,itpS(1,i):itpS(1,i+1)),'*',ts(itpS(1,i):itpS(1,i+1)),f,'-')
+    
+    [p, S] = polyfit(ts(itpS(1,i):itpS(1,i+1)),SignalNoisy(2,itpS(1,i):itpS(1,i+1)),polynomial);
+    f = polyval(p,ts(itpS(1,i):itpS(1,i+1)));
+    plot(ts(itpS(1,i):itpS(1,i+1)),SignalNoisy(2,itpS(1,i):itpS(1,i+1)),'*',ts(itpS(1,i):itpS(1,i+1)),f,'-')
+
+    
+    [p, S] = polyfit(ts(itpS(1,i):itpS(1,i+1)),xs(1,itpS(1,i):itpS(1,i+1)),polynomial);
+    f = polyval(p,ts(itpS(1,i):itpS(1,i+1)));
+    plot(ts(itpS(1,i):itpS(1,i+1)),xs(1,itpS(1,i):itpS(1,i+1)),'*',ts(itpS(1,i):itpS(1,i+1)),f,'-')
+    
+    title(['Order is: ',num2str(polynomial),' norm is: ',num2str(S.normr)])
+    hold off
+    
+    
+    
+    
     GMModel = fitgmdist(X,1);
     figure
     y = [zeros(1000,1);ones(1000,1)];
@@ -320,12 +378,12 @@ tpe = dataPE(:,1)';
 SignalNoisy = dataPE(:,2:3)';
 xpe = KalmanFilter(A,C,Q,R,xInit,PInit,SignalNoisy);
 X = [sgolayfilt(SignalNoisy(1,:),7,111); sgolayfilt(SignalNoisy(2,:),7,111)]';
-GMModel = fitgmdist(X,2);
+GMModelPE = fitgmdist(X,2);
 figure('Name','Parallel extension')
 y = [zeros(1000,1);ones(1000,1)];
 h = gscatter(X(:,1),X(:,2));
 hold on
-gmPDF = @(x1,x2)reshape(pdf(GMModel,[x1(:) x2(:)]),size(x1));
+gmPDF = @(x1,x2)reshape(pdf(GMModelPE,[x1(:) x2(:)]),size(x1));
 g = gca;
 fcontour(gmPDF,[g.XLim g.YLim])
 title('{\bf Scatter Plot and Fitted Gaussian Mixture Contours}')
@@ -389,10 +447,35 @@ for i =1:itpSize-1
     plot(tpe(itpPE(1,i):itpPE(1,i+1)),SignalNoisy(1,itpPE(1,i):itpPE(1,i+1)),'r');
     plot(tpe(itpPE(1,i):itpPE(1,i+1)),SignalNoisy(2,itpPE(1,i):itpPE(1,i+1)));
     X = [sgolayfilt(SignalNoisy(1,itpPE(1,i):itpPE(1,i+1)),5,7);sgolayfilt(SignalNoisy(2,itpPE(1,i):itpPE(1,i+1)),5,7)]';
-    %PolyFit
-    %[p, S, mu] = polyfit(t(itp(i):itp(i+1)),SignalNoisy(2,itp(i):itp(i+1)),10);
-    %plot(t(itp(i):itp(i+1)), polyval(p, t(itp(i):itp(i+1)))); 
     hold off
+    
+    
+    
+    
+    %PolyFit
+    figure
+    polynomial=3;
+    hold on
+    [p, S] = polyfit(tpe(itpPE(1,i):itpPE(1,i+1)),SignalNoisy(1,itpPE(1,i):itpPE(1,i+1)),polynomial);
+    f = polyval(p,tpe(itpPE(1,i):itpPE(1,i+1)));
+    plot(tpe(itpPE(1,i):itpPE(1,i+1)),SignalNoisy(1,itpPE(1,i):itpPE(1,i+1)),'*',tpe(itpPE(1,i):itpPE(1,i+1)),f,'-')
+    
+    [p, S] = polyfit(tpe(itpPE(1,i):itpPE(1,i+1)),SignalNoisy(2,itpPE(1,i):itpPE(1,i+1)),polynomial);
+    f = polyval(p,tpe(itpPE(1,i):itpPE(1,i+1)));
+    plot(tpe(itpPE(1,i):itpPE(1,i+1)),SignalNoisy(2,itpPE(1,i):itpPE(1,i+1)),'*',tpe(itpPE(1,i):itpPE(1,i+1)),f,'-')
+    
+    [p, S] = polyfit(tpe(itpPE(1,i):itpPE(1,i+1)),xpe(1,itpPE(1,i):itpPE(1,i+1)),polynomial);
+    f = polyval(p,tpe(itpPE(1,i):itpPE(1,i+1)));
+    plot(tpe(itpPE(1,i):itpPE(1,i+1)),xpe(1,itpPE(1,i):itpPE(1,i+1)),'*',tpe(itpPE(1,i):itpPE(1,i+1)),f,'-')
+    
+    title(['Order is: ',num2str(polynomial),' norm is: ',num2str(S.normr)])
+    hold off
+    
+    
+    
+    
+    
+    
     GMModel = fitgmdist(X,1);
     figure
     y = [zeros(1000,1);ones(1000,1)];
